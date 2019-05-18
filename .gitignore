@@ -12,6 +12,7 @@
 *.obj
 *.o
 *.xbe
+*.dxt
 *.inl
 *.d
 *.i
