@@ -2,7 +2,7 @@ ifeq ($(DXT_TITLE),)
 DXT_TITLE = nxdk_app
 endif
 
-CDXT         = $(NXDK_DIR)/tools/cxbe/cdxt
+#CDXT         = $(NXDK_DIR)/tools/cxbe/cdxt
 
 LDFLAGS += $(NXDK_DIR)/lib/xbdm/libxbdm.lib
 
@@ -19,7 +19,7 @@ NXDK_STACKSIZE=65536 -entry:DxtEntry
 # A bit of a hack because bin/ does not exist.
 #
 #FIXME: The proper solution is to run a tool which moves sections in the EXE or XBE around
-bin/$(DXT_TITLE).dxt: main.exe
+bin/$(DXT_TITLE).dxt: main.exe cdxt
 	@echo "[ BUILD    ] $@"
 	@mkdir -p bin/
 	$(CDXT) -OUT:$@ $<

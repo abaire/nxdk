@@ -1,24 +1,28 @@
-INCLUDES := \
+DEPS := \
 	Common.h \
 	Cxbx.h \
 	Error.h \
 	Exe.h \
 	Xbe.h
 SRCS := \
-	Main.cpp \
 	Common.cpp \
 	Error.cpp \
 	Exe.cpp \
 	Logo.cpp \
 	Xbe.cpp
 
+OBJS := $(SRCS:.cpp=.o)
+
 .PHONY: all
 all: cxbe cdxt
 
-cxbe: $(SRCS) $(INCLUDES)
-	$(CXX) -o '$@' $(SRCS)
+%.o: %.cpp $(DEPS)
+	$(CXX) $(CXXFLAGS) -c -o '$@' '$<'
 
-cdxt: Cdxt.cpp $(SRCS) $(INCLUDES)
+cxbe: Cxbe.cpp $(OBJS)
+	$(CXX) -o '$@' $^
+
+cdxt: Cdxt.cpp $(OBJS)
 	$(CXX) -o '$@' $^
 
 .PHONY: clean

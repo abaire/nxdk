@@ -38,10 +38,11 @@ endif
 
 TARGET       = $(OUTPUT_DIR)/default.xbe
 CXBE         = $(NXDK_DIR)/tools/cxbe/cxbe
+CDXT         = $(NXDK_DIR)/tools/cxbe/cdxt
 VP20COMPILER = $(NXDK_DIR)/tools/vp20compiler/vp20compiler
 FP20COMPILER = $(NXDK_DIR)/tools/fp20compiler/fp20compiler
 EXTRACT_XISO = $(NXDK_DIR)/tools/extract-xiso/build/extract-xiso
-TOOLS        = cxbe vp20compiler fp20compiler extract-xiso
+TOOLS        = cxbe cdxt vp20compiler fp20compiler extract-xiso
 
 ifeq ($(DEBUG),y)
 NXDK_ASFLAGS += -g -gdwarf-4
@@ -153,6 +154,11 @@ tools: $(TOOLS)
 
 cxbe: $(CXBE)
 $(CXBE):
+	@echo "[ BUILD    ] $@"
+	$(VE)$(MAKE) -C $(NXDK_DIR)/tools/cxbe $(QUIET)
+
+cdxt: $(CDXT)
+$(CDXT):
 	@echo "[ BUILD    ] $@"
 	$(VE)$(MAKE) -C $(NXDK_DIR)/tools/cxbe $(QUIET)
 

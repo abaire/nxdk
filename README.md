@@ -70,6 +70,7 @@ Code Overview
 * `lib/xboxkrnl` - Header and import library for interfacing with the Xbox kernel.
 * `lib/xboxrt` - Miscellaneous functionality for debugging etc.
 * `tools/cxbe` - Simple converter for PE executables to the Xbox executable format, from OpenXDK.
+* `tools/cdxt` - Simple converter for PE executables to the Xbox debug extension format.
 * `tools/fp20compiler` - Translates register combiner descriptions to Xbox pushbuffer commands.
 * `tools/vp20compiler` - Translates vertex program assembly to Xbox microcode.
 * `tools/extract-xiso` - Generates and extracts ISO images compatible with the Xbox (and XQEMU).
