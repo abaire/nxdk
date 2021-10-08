@@ -3,7 +3,10 @@
 // SPDX-FileCopyrightText: 2019-2021 Stefan Schmidt
 
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
+#include <locale.h>
+#include <math.h>
 #include <stdlib.h>
 #include <threads.h>
 #include <windows.h>
@@ -85,10 +88,79 @@ unsigned __int64 _byteswap_uint64 (unsigned __int64 val)
     return __builtin_bswap64(val);
 }
 
+// Simulates a special case of strcasecmp, `target` must be lowercase.
+// Returns the number of characters in `str` that match `target` after being
+// converted via `tolower`.
+static inline int matching_chars(const char *str, const char *target) {
+  int ret = 0;
+
+  for (; *str && *target && tolower(*str) == *target; ++str, ++target, ++ret) {
+  }
+
+  return ret;
+}
 
 double strtod( const char * _PDCLIB_restrict nptr, char * * _PDCLIB_restrict endptr )
 {
-    assert(0);
+    struct lconv * locale = localeconv();
+    double sign = 1.0;
+    const char * digit_end = NULL;
+    BOOL is_hex = FALSE;
+    int matching_len;
+
+    while(*nptr && isspace(*nptr)) {
+      ++nptr;
+    }
+    if (!*nptr) {
+      return 0.0;
+    }
+
+    //  A valid floating point number for strtod using the "C" locale is formed by an optional sign character (+ or -), followed by one of:
+    if (*nptr == '+') {
+      ++nptr;
+    } else if (*nptr == '-') {
+      sign = -1.0;
+      ++nptr;
+    }
+
+    if (!*nptr) {
+      return 0.0;
+    }
+
+    matching_len = matching_chars(nptr, "infinity");
+    if (matching_len == 3 || matching_len == 8) {
+      if (endptr) {
+        *endptr = (char *)nptr + matching_len;
+      }
+      return sign * INFINITY;
+    }
+
+    matching_len = matching_chars(nptr, "nan");
+    if (matching_len == 3) {
+      if (endptr) {
+        *endptr = (char *)nptr + matching_len;
+      }
+      return NAN;
+    }
+
+    if (*nptr == '0' && (nptr[1] == 'x' || nptr[1] == 'X')) {
+      // Hex
+      is_hex = TRUE;
+      nptr += 2;
+    }
+
+    digit_end = nptr;
+    for (; *digit_end && (isdigit(*digit_end) || *digit_end == *locale->decimal_point)
+    while (*digit_end &&
+           )
+    if (!isdigit(*nptr) && *nptr == '.') {
+      return 0.0;
+    }
+
+//  - A sequence of digits, optionally containing a decimal-point character (.), optionally followed by an exponent part (an e or E character followed by an optional sign and a sequence of digits).
+//  - A 0x or 0X prefix, then a sequence of hexadecimal digits (as in isxdigit) optionally containing a period which separates the whole and fractional number parts. Optionally followed by a power of 2 exponent (a p or P character followed by an optional sign and a sequence of hexadecimal digits).
+//  - INF or INFINITY (ignoring case).
+//  - NAN or NANsequence (ignoring case), where sequence is a sequence of characters, where each character is either an alphanumeric character (as in isalnum) or the underscore character (_).
     return 0.0;
 }
 
