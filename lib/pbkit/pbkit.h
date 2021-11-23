@@ -73,6 +73,16 @@ void    pb_set_viewport(int dwx,int dwy,int width,int height,float zmin,float zm
 
 int pb_busy(void);
 
+void pb_create_dma_ctx(DWORD ChannelID,
+                       DWORD Class,
+                       DWORD Base,
+                       DWORD Limit,
+                       struct s_CtxDma *pDmaObject);
+void pb_create_gr_ctx(int ChannelID,
+                      int Class,
+                      struct s_CtxDma *pGrObject);
+void pb_bind_channel(struct s_CtxDma *pCtxDmaObject);
+
 #ifdef __cplusplus
 }
 #endif
