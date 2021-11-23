@@ -46,15 +46,6 @@
 #define ADDR_FBMEM                  2
 #define ADDR_AGPMEM                 3
 
-#define DMA_CLASS_2                 2
-#define DMA_CLASS_3                 3
-#define DMA_CLASS_3D                    0x3D
-
-#define GR_CLASS_30                 0x30
-#define GR_CLASS_39                 0x39
-#define GR_CLASS_62                 0x62
-#define GR_CLASS_97                 0x97
-#define GR_CLASS_9F                 0x9F
 
 #define GPU_IRQ                     3
 
@@ -73,14 +64,6 @@
 #define PB_SETNOISE                 0xBAA
 #define PB_FINISHED                 0xFAB
 
-struct s_CtxDma
-{
-    DWORD               ChannelID;
-    DWORD               Inst;   //Addr in PRAMIN area, unit=16 bytes blocks, baseaddr=VIDEO_BASE+NV_PRAMIN
-    DWORD               Class;
-    DWORD               isGr;
-};
-
 static unsigned int pb_ColorFmt = NV097_SET_SURFACE_FORMAT_COLOR_LE_A8R8G8B8;
 static unsigned int pb_DepthFmt = NV097_SET_SURFACE_FORMAT_ZETA_Z24S8;
 
@@ -93,7 +76,7 @@ static int          pb_trace_mode=1;
 #else
 static int          pb_trace_mode=0;
 #endif
-                //if set, we wait after each block sending (pb_end) 
+                //if set, we wait after each block sending (pb_end)
                 //so we are sure GPU received all the data (slower)
                 //and that any GPU error comes from last block sent.
 
@@ -420,7 +403,7 @@ static void pb_print_char(char c)
             pb_next_row++;
             if (pb_next_row>=ROWS) { pb_next_row=ROWS-1; pb_scrollup(); }
             pb_next_col=0;
-        }       
+        }
     }
 }
 
@@ -521,7 +504,7 @@ static void pb_subprog(DWORD subprogID, DWORD paramA, DWORD paramB)
     //so they can be used by a push buffer sequence to set parameters
     //before triggering a subprogram by the command 0x0100 which will
     //throw an interrupt and have CPU execute its code right here.
-    
+
     //Here just test the subprogID value and execute your own subprogram
     //associated code (avoid using subprogID=0, it seems to be reserved)
 
@@ -556,7 +539,7 @@ static void pb_subprog(DWORD subprogID, DWORD paramA, DWORD paramB)
             break;
     }
 }
- 
+
 
 
 static DWORD pb_gr_handler(void)
@@ -569,7 +552,7 @@ static DWORD pb_gr_handler(void)
     DWORD           nsource;
 
     DWORD           GrClass;
-    
+
     DWORD           DataLow;
 
     int         i;
@@ -689,7 +672,7 @@ static DWORD pb_gr_handler(void)
                                     VIDEOREG(NV_PGRAPH_PARAMETER_B)     );
 
                             if (pb_trace_mode==0) debugPrint("Report is accurate only if pb_trace_mode=1 (slower)\n");
-                            
+
                             debugPrint("System halted\n");
 
                             //calling XReboot() from here doesn't work well.
@@ -832,7 +815,7 @@ static DWORD pb_fifo_handler(void)
         {
             if ((pull&NV_PFIFO_CACHE1_PULL0_HASH_STATE_BUSY)==0) break;
             pull=VIDEOREG(NV_PFIFO_CACHE1_PULL0);
-        }       
+        }
 
         if (    (pull&NV_PFIFO_CACHE1_PULL0_DEVICE_SOFTWARE)||
             (pull&NV_PFIFO_CACHE1_PULL0_HASH_FAILED)    )
@@ -855,7 +838,7 @@ static DWORD pb_fifo_handler(void)
 
         VIDEOREG(NV_PFIFO_INTR_0)=NV_PFIFO_INTR_0_DMA_PUSHER_RESET;
         VIDEOREG(NV_PFIFO_CACHE1_DMA_STATE)=NV_PFIFO_CACHE1_DMA_STATE_METHOD_COUNT_0;
-        
+
         if (VIDEOREG(NV_PFIFO_CACHE1_DMA_PUT)!=VIDEOREG(NV_PFIFO_CACHE1_DMA_GET))
             VIDEOREG(NV_PFIFO_CACHE1_DMA_GET)+=(1<<2);
     }
@@ -885,7 +868,7 @@ static DWORD pb_fifo_handler(void)
                 skip_waiting=1;
                 break;
             }
-            
+
         }while(VIDEOREG8(NV_PFIFO_CACHE1_STATUS)&NV_PFIFO_CACHE1_STATUS_LOW_MARK_EMPTY);
 
         if (skip_waiting==0)
@@ -945,7 +928,7 @@ static void pb_set_fifo_channel(int channel)
         pending_flags&=~(1<<old_channel);
         if (VIDEOREG(NV_PFIFO_CACHE1_DMA_PUT)!=VIDEOREG(NV_PFIFO_CACHE1_DMA_GET))
             pending_flags|=(1<<old_channel);
-        VIDEOREG(NV_PFIFO_DMA)=pending_flags;           
+        VIDEOREG(NV_PFIFO_DMA)=pending_flags;
     }
 
     //let's switch from old_channel to channel
@@ -1012,7 +995,7 @@ static void __stdcall DPC(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument
 
         if (status&NV_PMC_INTR_0_PGRAPH_PENDING) more|=pb_gr_handler();
 
-        if (    (VIDEOREG8(NV_PFIFO_DEBUG_0)&NV_PFIFO_DEBUG_0_CACHE_ERROR0_PENDING)||   
+        if (    (VIDEOREG8(NV_PFIFO_DEBUG_0)&NV_PFIFO_DEBUG_0_CACHE_ERROR0_PENDING)||
             (status&NV_PMC_INTR_0_PFIFO_PENDING)    ) more|=pb_fifo_handler();
 
         if (    (VIDEOREG8(NV_PVIDEO_INTR)&NV_PVIDEO_INTR_BUFFER_0_PENDING)||
@@ -1056,7 +1039,7 @@ static int pb_install_gpu_interrupt(void)
 {
     int r;
     KIRQL irql;
-    ULONG vector;   
+    ULONG vector;
 
     vector = HalGetInterruptVector(GPU_IRQ, &irql);
 
@@ -1069,7 +1052,7 @@ static int pb_install_gpu_interrupt(void)
                 irql,
                 LevelSensitive,
                 TRUE);
-    
+
     r=KeConnectInterrupt(&pb_InterruptObject);
 
     return r;
@@ -1132,7 +1115,7 @@ static void pb_release_tile(int index,int clear_offset)
 
         *(pTile+0)=0;
         *(p+0)=0;
-        VIDEOREG(NV_PGRAPH_RDI_INDEX)=addr; VIDEOREG(NV_PGRAPH_RDI_DATA)=data;      
+        VIDEOREG(NV_PGRAPH_RDI_INDEX)=addr; VIDEOREG(NV_PGRAPH_RDI_DATA)=data;
     }while(*(pTile+0)!=*(p+0));
 
     //points tile Zcomp in NV_PFB
@@ -1147,7 +1130,7 @@ static void pb_release_tile(int index,int clear_offset)
 
     *(pZcomp+0)=0;
     *(p+0)=0;
-    VIDEOREG(NV_PGRAPH_RDI_INDEX)=addr; VIDEOREG(NV_PGRAPH_RDI_DATA)=data;      
+    VIDEOREG(NV_PGRAPH_RDI_INDEX)=addr; VIDEOREG(NV_PGRAPH_RDI_DATA)=data;
 
     if (clear_offset)
     {
@@ -1207,7 +1190,7 @@ void pb_assign_tile(    int tile_index,
         pb_wait_until_gr_not_busy();
 
         *(pTile+0)=tile_addr|2|(tile_flags&1);
-        *(p+0)=tile_addr|2|(tile_flags&1); 
+        *(p+0)=tile_addr|2|(tile_flags&1);
         VIDEOREG(NV_PGRAPH_RDI_INDEX)=addr10; VIDEOREG(NV_PGRAPH_RDI_DATA)=tile_addr|2|(tile_flags&1);
 
         *(pTile+1)=tile_tail;
@@ -1348,7 +1331,7 @@ static void pb_prepare_tiles(void)
 
 
 
-static void pb_create_dma_ctx(  DWORD ChannelID,
+void pb_create_dma_ctx(  DWORD ChannelID,
                 DWORD Class,
                 DWORD Base,
                 DWORD Limit,
@@ -1379,7 +1362,7 @@ static void pb_create_dma_ctx(  DWORD ChannelID,
     dma_flags|=0x00003000;
     if (AddrSpace==ADDR_AGPMEM) dma_flags|=0x00030000;
     if (AddrSpace==ADDR_SYSMEM) dma_flags|=0x00020000;
-    dma_flags|=0x00008000;          
+    dma_flags|=0x00008000;
 
     VIDEOREG(NV_PRAMIN+(Inst<<4)+0x08)=Addr|3;  //0x00000003|Addr
     VIDEOREG(NV_PRAMIN+(Inst<<4)+0x0C)=Addr|3;  //0x00000003|Addr
@@ -1397,13 +1380,13 @@ static void pb_create_dma_ctx(  DWORD ChannelID,
 
 
 
-static void pb_bind_channel(struct s_CtxDma *pCtxDmaObject)
+void pb_bind_channel(struct s_CtxDma *pCtxDmaObject)
 {
     DWORD       entry;
     DWORD       *p;
-    
+
     //entry in hash table
-    entry=(((pCtxDmaObject->ChannelID>>11)^pCtxDmaObject->ChannelID)>>11)^pCtxDmaObject->ChannelID; 
+    entry=(((pCtxDmaObject->ChannelID>>11)^pCtxDmaObject->ChannelID)>>11)^pCtxDmaObject->ChannelID;
 
     //entry*8 max valid value is 0x1000
 
@@ -1415,7 +1398,7 @@ static void pb_bind_channel(struct s_CtxDma *pCtxDmaObject)
         (pb_FifoChannelID<<24)|
         (pCtxDmaObject->isGr<<16)|
         (pCtxDmaObject->Inst&0xFFFF);
-}   
+}
 
 
 
@@ -1424,7 +1407,7 @@ static void pb_3D_init(void)
     DWORD           Inst;
 
     int             channel;
-    
+
     int         i;
 
     DWORD           offset;
@@ -1632,7 +1615,7 @@ static void pb_3D_init(void)
 
 
 
-static void pb_create_gr_ctx(   int ChannelID,
+void pb_create_gr_ctx(   int ChannelID,
                 int Class,
                 struct s_CtxDma *pGrObject  )
 {
@@ -1642,14 +1625,14 @@ static void pb_create_gr_ctx(   int ChannelID,
     int         size;
 
     DWORD           Inst;
-    
+
     flags3D=0;
 
     if (    (Class!=GR_CLASS_30)&&
         (Class!=GR_CLASS_39)&&
         (Class!=GR_CLASS_62)&&
         (Class!=GR_CLASS_97)&&
-        (Class!=GR_CLASS_9F)    ) 
+        (Class!=GR_CLASS_9F)    )
     {
         //"CreateGrObject invalid class number"
         size=Class;
@@ -1706,12 +1689,12 @@ static void pb_start(void)
         //from now any write will be detected
 
 #ifdef DBG
-        if ((*(pb_DmaUserAddr+0x44/4))>0x04000000) 
+        if ((*(pb_DmaUserAddr+0x44/4))>0x04000000)
         {
             debugPrint("pb_start: wrong GetAddr\n");
             return;
         }
-#endif      
+#endif
     }
 }
 
@@ -1733,7 +1716,7 @@ static void pb_jump_to_head(void)
     DWORD           TimeStampTicks;
 
 #ifdef DBG
-    if (pb_BeginEndPair) 
+    if (pb_BeginEndPair)
     {
         debugPrint("pb_reset musn't be called inside a begin-end block.\n");
         return;
@@ -1746,12 +1729,12 @@ static void pb_jump_to_head(void)
     pb_Put=pb_Head;
     pb_start();
 
-    TimeStampTicks=KeTickCount; 
+    TimeStampTicks=KeTickCount;
 
     //wait for arrival of Gpu Get to push buffer head
     do
     {
-        if ((*(pb_DmaUserAddr+0x44/4))>0x04000000) 
+        if ((*(pb_DmaUserAddr+0x44/4))>0x04000000)
         {
 #ifdef DBG
             debugPrint("pb_reset: bad getaddr\n");
@@ -1769,7 +1752,7 @@ static void pb_jump_to_head(void)
         //converts physical address into virtual address
         pGetAddr=(uint32_t *)((*(pb_DmaUserAddr+0x44/4))|0x80000000);
     }while (pGetAddr!=pb_Head);
-            
+
 }
 
 
@@ -1788,18 +1771,18 @@ int pb_busy(void)
 
     GetAddr=*(pb_DmaUserAddr+0x44/4);
 #ifdef DBG
-    if (GetAddr>0x04000000) 
+    if (GetAddr>0x04000000)
     {
         debugPrint("pb_busy: wrong GetAddr\n");
         return 0;
-    }   
+    }
 #endif
     PutAddr=(DWORD)pb_Put;
 
     if ((GetAddr^PutAddr)&0x0FFFFFFF) return 1; //means different addresses
 
     if (VIDEOREG(NV_PGRAPH_STATUS)) return 1;
-    
+
     return 0;
 }
 
@@ -1850,7 +1833,7 @@ static void set_draw_buffer(DWORD buffer_addr)
 
     int         flag;
     int         depth_stencil;
-    
+
     width=pb_FrameBuffersWidth;
     height=pb_FrameBuffersHeight;
     pitch=pb_FrameBuffersPitch;
@@ -1880,7 +1863,7 @@ static void set_draw_buffer(DWORD buffer_addr)
     dma_limit=height*pitch-1; //(last byte)
     dma_flags=DMA_CLASS_3D|0x0000B000;
     dma_addr|=3;
-    
+
     p=pb_begin();
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_WAIT_MAKESPACE,0);
     p=pb_push2(p,NV20_TCL_PRIMITIVE_3D_PARAMETER_A,NV_PRAMIN+(pb_DmaChID11Inst<<4)+0x08,dma_addr); //set params addr,data
@@ -1917,7 +1900,7 @@ static void set_draw_buffer(DWORD buffer_addr)
             flag=0;
             pitch_depth_stencil=pitch;
         }
-        
+
         p=pb_begin();
         p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_WAIT_MAKESPACE,0);
         p=pb_push2(p,NV20_TCL_PRIMITIVE_3D_PARAMETER_A,NV_PRAMIN+(pb_DmaChID10Inst<<4)+0x08,dma_addr); //set params addr,data
@@ -1961,7 +1944,7 @@ void pb_target_extra_buffer(int buffer_index)
         debugPrint("pb_target_extra_buffer: buffer index out of range\n");
         return;
     }
-    
+
     set_draw_buffer(pb_EXAddr[buffer_index]&0x03FFFFFF);
 }
 
@@ -1982,13 +1965,13 @@ void pb_print(const char *format, ...)
 {
     char    buffer[512];
     int     i;
-    
+
     va_list argList;
     va_start(argList, format);
     vsprintf(buffer, format, argList);
     va_end(argList);
 
-    for(i=0;i<strlen(buffer);i++) pb_print_char(buffer[i]); 
+    for(i=0;i<strlen(buffer);i++) pb_print_char(buffer[i]);
 }
 
 void pb_printat(int row, int col, char *format, ...)
@@ -1998,20 +1981,20 @@ void pb_printat(int row, int col, char *format, ...)
 
     if ((row>=0)&&(row<ROWS)) pb_next_row=row;
     if ((col>=0)&&(col<COLS)) pb_next_col=col;
-    
+
     va_list argList;
     va_start(argList, format);
     vsprintf(buffer, format, argList);
     va_end(argList);
 
-    for(i=0;i<strlen(buffer);i++) pb_print_char(buffer[i]); 
+    for(i=0;i<strlen(buffer);i++) pb_print_char(buffer[i]);
 }
 
 
 
 void pb_erase_text_screen(void)
 {
-    pb_next_row=0;  
+    pb_next_row=0;
     pb_next_col=0;
     memset(pb_text_screen,0,sizeof(pb_text_screen));
 }
@@ -2037,10 +2020,10 @@ void pb_draw_text_screen(void)
         if (c)
         {
             for(l=0,x1=-1,x2=-1;l<8;l++,x1=-1,x2=-1)
-            for(k=0,m=0x80;k<8;k++,m>>=1)                   
+            for(k=0,m=0x80;k<8;k++,m>>=1)
             if (systemFont[c*8+l]&m)
             {
-                if (x1>=0) 
+                if (x1>=0)
                     x2=20+j*10+k;
                 else
                     x1=20+j*10+k;
@@ -2062,7 +2045,7 @@ void pb_draw_text_screen(void)
                 }
             }
         }
-    }   
+    }
 }
 
 
@@ -2119,16 +2102,16 @@ static int logging=0;
 void pb_start_log(void)
 {
     if (logging) return;
-    
+
     logging=1;
-    
+
     fd=fopen("pbkit_record.txt","w");
 }
 
 void pb_stop_log(void)
 {
     if (logging==0) return;
-    
+
     logging=0;
     fclose(fd);
 }
@@ -2139,16 +2122,16 @@ void pb_end(uint32_t *pEnd)
 {
     DWORD           TimeStamp1;
     DWORD           TimeStamp2;
-    
+
     int         i;
 
 #ifdef LOG
     uint32_t    *p;
     int         n;
-    
+
     if (logging)
     {
-        p=pb_PushStart;     
+        p=pb_PushStart;
         while (p!=pEnd)
         {
             n=(*p>>18)&0x7FF;
@@ -2175,12 +2158,12 @@ void pb_end(uint32_t *pEnd)
 #endif
 
     pb_Put=pEnd;
-    
+
     pb_start(); //start (or continue) reading and sending data to GPU
 
     if (pb_trace_mode) //do we want to wait until block data has been sent (for debugging GPU errors)?
     {
-        
+
         TimeStamp1=KeTickCount;
 
         //wait until all begin-end block has been sent to GPU
@@ -2449,7 +2432,7 @@ void pb_erase_depth_stencil_buffer(int x, int y, int w, int h)
     y1=y;
     x2=x+w;
     y2=y+h;
-    
+
     p=pb_begin();
     pb_push(p++,NV20_TCL_PRIMITIVE_3D_CLEAR_VALUE_HORIZ,2);     //sets rectangle coordinates
     *(p++)=((x2-1)<<16)|x1;
@@ -2485,7 +2468,7 @@ int pb_finished(void)
     //(because previous ones may not have finished yet, so need to use 0x0100 call)
     pb_back_index=(pb_back_index+1)%3;
     pb_target_back_buffer();
-    
+
     return 0;
 }
 
@@ -2509,7 +2492,7 @@ void pb_kill(void)
 //  debugPrint("Waiting until Dma is not busy\n");
 #endif
     if (pb_Put)
-    {   
+    {
         pb_start();
         pb_wait_until_gr_not_busy();
 
@@ -2521,7 +2504,7 @@ void pb_kill(void)
 
         while(1)
         {
-            if ((*(pb_DmaUserAddr+0x44/4))>0x04000000) 
+            if ((*(pb_DmaUserAddr+0x44/4))>0x04000000)
             {
                 debugPrint("pb_kill: Bad get addr\n");
                 break;
@@ -2675,8 +2658,8 @@ int pb_init(void)
     DWORD           GetAddr;
     DWORD           PutAddr;
                         //Dma channel properties
-    int             dma_trig=128;   //min 8     max 256 
-    int         dma_size=128;   //min 32    max 256 
+    int             dma_trig=128;   //min 8     max 256
+    int         dma_size=128;   //min 32    max 256
     int         dma_max_reqs=8; //min 0     max 15
 
     DWORD           dummy;
@@ -2717,11 +2700,11 @@ int pb_init(void)
 
     DWORD           EXAddr;
     DWORD           EXSize;
-    
+
     int         n;
 
     DWORD           value;
-    
+
     if (pb_running) return -8;
 
     //reset global vars (except pb_Size)
@@ -2822,8 +2805,8 @@ int pb_init(void)
         }
     }
     else
-    { 
-        pb_kill(); 
+    {
+        pb_kill();
         return -5; //invalid GPU internal PLL (Phase Locked Loop=GPU freq generator)
     }
 
@@ -2836,7 +2819,7 @@ int pb_init(void)
 
     //The Gpu instance memory is a special place in PRAMIN area (VRAM attached to RAM?)
     //Essential Gpu data will be stored there, for, I guess, top speed access.
-    
+
     if ((VIDEOREG(NV_PFB_CFG0)&NV_PFB_CFG0_PART_3)!=3)
     {
         pb_kill();
@@ -2884,7 +2867,7 @@ int pb_init(void)
     //zeroes whole GPU instance memory
     for(i=0;i<INSTANCE_MEM_MAXSIZE;i+=4) VIDEOREG(NV_PRAMIN+baseaddr+i)=0;
 
-    //reserve 8 blocks (128 bytes) for GrCtxTable 
+    //reserve 8 blocks (128 bytes) for GrCtxTable
     //(2 first dwords will point at the 2 graphic contexts for the 2 channels)
     pb_GrCtxTableInst=pb_FreeInst; pb_FreeInst+=8;
 
@@ -2943,7 +2926,7 @@ int pb_init(void)
 
 
     pb_GrCtxID=NONE;
-    
+
 
 
     VIDEOREG(NV_PGRAPH_CHANNEL_CTX_TABLE)=pb_GrCtxTableInst&NV_PGRAPH_CHANNEL_CTX_TABLE_INST;
@@ -3089,7 +3072,7 @@ int pb_init(void)
     //calculate number of CPU cycles per second
     HalReadWritePCISpace(0,0x60,0x6C,&value,4,FALSE);
         //BusNumber,SlotNumber,RegisterNumber,pBuffer,Length,bWritePCISpace
-    if (value&0xFF) 
+    if (value&0xFF)
         pb_CpuFrequency=5.5f*((float)((value>>8)&0xFF))*(XTAL_16MHZ/((float)(value&0xFF)));
     else
         pb_CpuFrequency=733.33f; //Mhz, theoretically
@@ -3113,6 +3096,7 @@ int pb_init(void)
     pb_create_dma_ctx(8,DMA_CLASS_3D,(DWORD)pb_DmaBuffer8,0x20,&sDmaObject8);
     pb_create_dma_ctx(6,DMA_CLASS_2,0,MAXRAM,&sDmaObject6);
 
+
     //we initialized channel 0 first, that will match graphic context 0
     pb_FifoChannelID=0;
     pb_FifoChannelsMode=NV_PFIFO_MODE_ALL_PIO;
@@ -3121,7 +3105,7 @@ int pb_init(void)
 
     dummy=VIDEOREG(NV_PFIFO_CACHES);
 
-    channel=pb_FifoChannelID;   
+    channel=pb_FifoChannelID;
 
     VIDEOREG(NV_PFIFO_CACHES)=NV_PFIFO_CACHES_ALL_DISABLE;
 
@@ -3150,7 +3134,7 @@ int pb_init(void)
     *(p+5)= ((dma_trig<<3)&NV_PFIFO_CACHE1_DMA_FETCH_TRIG)|
         ((dma_size<<13)&NV_PFIFO_CACHE1_DMA_FETCH_SIZE)|
         ((dma_max_reqs<<16)&NV_PFIFO_CACHE1_DMA_FETCH_MAX_REQS);
-        
+
     pb_FifoChannelsMode|=(1<<channel);
     VIDEOREG(NV_PFIFO_MODE)=pb_FifoChannelsMode;
 
@@ -3225,18 +3209,18 @@ int pb_init(void)
     while(1)
     {
         GetAddr=*(pb_DmaUserAddr+0x44/4);
-    
-        if (GetAddr>0x04000000) 
+
+        if (GetAddr>0x04000000)
         {
             debugPrint("pb_init: Bad getaddr\n");
             pb_kill();
             return -9;
-        }   
+        }
 
         PutAddr=((DWORD)pb_Put);
 
         if (((GetAddr^PutAddr)&0x0FFFFFFF)==0) break; //means same addresses (Dma is ready)
-    
+
         TimeStamp2=KeTickCount;
 
         if (TimeStamp2-TimeStamp1>TICKSTIMEOUT)
@@ -3244,7 +3228,7 @@ int pb_init(void)
             debugPrint("pb_init: Dma didn't get ready in time\n");
             pb_kill();
             return -10;
-        }       
+        }
     }
 #ifdef DBG
 //  debugPrint("Dma is ready!!!\n");
@@ -3257,14 +3241,14 @@ int pb_init(void)
     //These commands assign DMA channels to push buffer subchannels
     //and associate some specific GPU parts to specific Dma channels
     p=pb_begin();
-    p=pb_push1_to(SUBCH_2,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,14);
-    p=pb_push1_to(SUBCH_3,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,16);
-    p=pb_push1_to(SUBCH_4,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,17);
-    p=pb_push1_to(SUBCH_3D,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,13);
-    p=pb_push1_to(SUBCH_2,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT0,7);
-    p=pb_push1_to(SUBCH_3,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT5,17);
-    p=pb_push1_to(SUBCH_3,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT_UNKNOWN,3);
-    p=pb_push2_to(SUBCH_4,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT1,3,11);
+    p=pb_push1_to(SUBCH_2,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,14);  // Class 39
+    p=pb_push1_to(SUBCH_3,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,16);  // Class 9F
+    p=pb_push1_to(SUBCH_4,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,17);  // Class 62
+    p=pb_push1_to(SUBCH_3D,p,NV20_TCL_PRIMITIVE_SET_MAIN_OBJECT,13);  // Class 97
+    p=pb_push1_to(SUBCH_2,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT0,7);  // NV039_SET_CONTEXT_DMA_NOTIFIES
+    p=pb_push1_to(SUBCH_3,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT5,17);  // NV09F_SET_CONTEXT_SURFACES
+    p=pb_push1_to(SUBCH_3,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT_UNKNOWN,3);  // Set operation to SRCCOPY
+    p=pb_push2_to(SUBCH_4,p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT1,3,11);  // Source ch 3, Dest ch 11
     pb_end(p); //calls pb_start() which will trigger the reading and sending to GPU (asynchronous, no waiting)
 
     //setup needed for color computations
@@ -3416,14 +3400,14 @@ int pb_init(void)
     pb_FBGlobalSize=FBSize;
 
     pb_FrameBuffersAddr=FBAddr;
-    if (!FBAddr) 
+    if (!FBAddr)
     {
         pb_kill();
         return -11;
     }
 
     for(i=0;i<FrameBufferCount;i++)
-    {   
+    {
         pb_FBAddr[i]=FBAddr;
         FBAddr+=Size;
     }
@@ -3453,7 +3437,7 @@ int pb_init(void)
 
 
     //Depth stencil buffer (tile #1)
-    
+
     //pitch is the gap between start of a pixel line and start of next pixel line
     //(not necessarily the size of a pixel line, because of hardware optimization)
 
@@ -3487,7 +3471,7 @@ int pb_init(void)
         //NumberOfBytes,LowestAcceptableAddress,HighestAcceptableAddress,Alignment OPTIONAL,ProtectionType
 
     pb_DepthStencilAddr=DSAddr;
-    if (!DSAddr) 
+    if (!DSAddr)
     {
         pb_kill();
         return -11;
@@ -3508,7 +3492,7 @@ int pb_init(void)
     if (pb_ExtraBuffersCount)
     {
         //Extra back buffers (tile #2)
-    
+
         //pitch is the gap between start of a pixel line and start of next pixel line
         //(not necessarily the size of a pixel line, because of hardware optimization)
 
@@ -3521,7 +3505,7 @@ int pb_init(void)
             {
                 Pitch=pb_TilePitches[i];
                 break;
-            }   
+            }
         }
 
         Size=Pitch*VSize;
@@ -3538,14 +3522,14 @@ int pb_init(void)
         EXAddr=(DWORD)MmAllocateContiguousMemoryEx(EXSize,0,0x03FFB000,0x4000,0x404);
         //NumberOfBytes,LowestAcceptableAddress,HighestAcceptableAddress,Alignment OPTIONAL,ProtectionType
 
-        if (!EXAddr) 
+        if (!EXAddr)
         {
             pb_kill();
             return -11;
-        }   
+        }
 
         for(i=0;i<pb_ExtraBuffersCount;i++)
-        {   
+        {
             pb_EXAddr[i]=EXAddr;
             EXAddr+=Size;
         }
