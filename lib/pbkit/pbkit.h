@@ -74,6 +74,10 @@ void    pb_set_viewport(int dwx,int dwy,int width,int height,float zmin,float zm
 
 int pb_busy(void);
 
+uint8_t *pb_depth_stencil_buffer();
+DWORD pb_depth_stencil_pitch();
+DWORD pb_depth_stencil_size();
+
 #ifdef __cplusplus
 }
 #endif
