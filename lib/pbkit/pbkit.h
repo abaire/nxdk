@@ -156,6 +156,10 @@ void pb_bind_channel(struct s_CtxDma *pCtxDmaObject);
 
 void pb_print_char(char c);
 
+uint8_t *pb_depth_stencil_buffer();
+DWORD pb_depth_stencil_pitch();
+DWORD pb_depth_stencil_size();
+
 #ifdef __cplusplus
 }
 #endif
