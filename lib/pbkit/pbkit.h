@@ -73,6 +73,14 @@ void    pb_set_viewport(int dwx,int dwy,int width,int height,float zmin,float zm
 
 int pb_busy(void);
 
+DWORD pb_reserve_instance(DWORD size);
+void pb_create_gr_instance(int ChannelID,
+                        int Class,
+                        DWORD instance,
+                        DWORD flags,
+                        DWORD flags3D,
+                        struct s_CtxDma *pGrObject);
+
 #ifdef __cplusplus
 }
 #endif
