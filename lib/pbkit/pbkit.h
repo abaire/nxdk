@@ -50,6 +50,7 @@ extern "C"
 #define SUBCH_2                 2
 #define SUBCH_3                 3
 #define SUBCH_4                 4
+#define NEXT_SUBCH              5
 
 //DMA and graphics classes
 #define DMA_CLASS_2                 0x02
@@ -134,6 +135,14 @@ void    pb_set_viewport(int dwx,int dwy,int width,int height,float zmin,float zm
 int pb_busy(void);
 
 void pb_print_char(char c);
+
+DWORD pb_reserve_instance(DWORD size);
+void pb_create_gr_instance(int ChannelID,
+                        int Class,
+                        DWORD instance,
+                        DWORD flags,
+                        DWORD flags3D,
+                        struct s_CtxDma *pGrObject);
 
 void pb_create_dma_ctx(DWORD ChannelID,
                        DWORD Class,
