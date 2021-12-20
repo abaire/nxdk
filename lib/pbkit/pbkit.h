@@ -154,6 +154,8 @@ void pb_create_gr_ctx(   int ChannelID,
                       struct s_CtxDma *pGrObject  );
 void pb_bind_channel(struct s_CtxDma *pCtxDmaObject);
 
+void pb_print_char(char c);
+
 #ifdef __cplusplus
 }
 #endif
