@@ -26,12 +26,11 @@ CGC          = $(NXDK_DIR)/tools/cg/linux/cgc
 endif #UNAME_M != x86_64
 endif
 ifeq ($(UNAME_S),Darwin)
-LLVM_DIR=$(shell brew --prefix llvm@11)/bin
-LD           = $(LLVM_DIR)/lld -flavor link
-LIB          = $(LLVM_DIR)/llvm-lib
-AS           = $(LLVM_DIR)/clang
-CC           = $(LLVM_DIR)/clang
-CXX          = $(LLVM_DIR)/clang++
+LD           = lld -flavor link
+LIB          = llvm-lib
+AS           = clang
+CC           = clang
+CXX          = clang++
 CGC          = $(NXDK_DIR)/tools/cg/mac/cgc
 endif
 ifneq (,$(findstring MSYS_NT,$(UNAME_S)))
