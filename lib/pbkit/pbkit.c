@@ -43,16 +43,6 @@
 #define ADDR_FBMEM                  2
 #define ADDR_AGPMEM                 3
 
-#define DMA_CLASS_2                 2
-#define DMA_CLASS_3                 3
-#define DMA_CLASS_3D                    0x3D
-
-#define GR_CLASS_30                 0x30
-#define GR_CLASS_39                 0x39
-#define GR_CLASS_62                 0x62
-#define GR_CLASS_97                 0x97
-#define GR_CLASS_9F                 0x9F
-
 #define GPU_IRQ                     3
 
 #define XTAL_16MHZ                  16.6667f
@@ -2060,7 +2050,7 @@ int pb_finished(void)
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_WAIT_MAKESPACE,0); //wait/makespace (obtains null status)
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_PARAMETER_A,pb_back_index); //set param=back buffer index to show up
     p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,PB_FINISHED); //subprogID PB_FINISHED: gets frame ready to show up soon
-//  p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_STALL_PIPELINE,0); //stall gpu pipeline (not sure it's needed in triple buffering technic)
+    p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_STALL_PIPELINE,0); //stall gpu pipeline (not sure it's needed in triple buffering technic)
     pb_end(p);
 
     //insert in push buffer the commands to trigger selection of next back buffer
