@@ -19,6 +19,7 @@ LIB          = llvm-lib
 AS           = clang
 CC           = clang
 CXX          = clang++
+OBJCOPY      = objcopy
 ifneq ($(UNAME_M),x86_64)
 CGC          = $(NXDK_DIR)/tools/cg/linux/cgc.i386
 else
@@ -31,6 +32,7 @@ LIB          = llvm-lib
 AS           = clang
 CC           = clang
 CXX          = clang++
+OBJCOPY      = llvm-objcopy
 CGC          = $(NXDK_DIR)/tools/cg/mac/cgc
 endif
 ifneq (,$(findstring MSYS_NT,$(UNAME_S)))
@@ -42,6 +44,7 @@ LIB          = llvm-lib
 AS           = clang
 CC           = clang
 CXX          = clang++
+OBJCOPY      = objcopy
 CGC          = $(NXDK_DIR)/tools/cg/win/cgc
 endif
 
@@ -123,6 +126,15 @@ DEPS += $(filter %.cpp.d, $(SRCS:.cpp=.cpp.d))
 
 $(OUTPUT_DIR)/default.xbe: main.exe $(OUTPUT_DIR) $(CXBE)
 	@echo "[ CXBE     ] $@"
+ifeq ($(UNAME_S),Darwin)
+	# llvm-objcopy@11 does not appear to implement compress-debug-sections, nor
+	# does --only-keep-debug work, so the full exe is cloned and linked.
+	$(VE)cp main.exe main.debug.exe
+	$(VE)$(OBJCOPY) --strip-debug main.exe
+	$(VE)$(OBJCOPY) --add-gnu-debuglink=main.debug.exe main.exe
+else
+	$(VE)$(OBJCOPY) --compress-debug-sections main.exe
+endif
 	$(VE)$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $< $(QUIET)
 
 $(OUTPUT_DIR):
@@ -202,7 +214,7 @@ $(EXTRACT_XISO):
 .PHONY: clean
 clean: $(CLEANRULES)
 	$(VE)rm -f $(TARGET) \
-	           main.exe main.exe.manifest main.lib \
+	           main.exe main.exe.manifest main.compressed_debug.exe main.debug.exe main.lib \
 	           $(OBJS) $(SHADER_OBJS) $(DEPS) \
 	           $(GEN_XISO)
 
