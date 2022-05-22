@@ -123,7 +123,8 @@ DEPS += $(filter %.cpp.d, $(SRCS:.cpp=.cpp.d))
 
 $(OUTPUT_DIR)/default.xbe: main.exe $(OUTPUT_DIR) $(CXBE)
 	@echo "[ CXBE     ] $@"
-	$(VE)$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $< $(QUIET)
+	$(VE)objcopy --compress-debug-sections main.exe main.compressed_debug.exe
+	$(VE)$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) main.compressed_debug.exe $(QUIET)
 
 $(OUTPUT_DIR):
 	@mkdir -p $(OUTPUT_DIR);
@@ -202,7 +203,7 @@ $(EXTRACT_XISO):
 .PHONY: clean
 clean: $(CLEANRULES)
 	$(VE)rm -f $(TARGET) \
-	           main.exe main.exe.manifest main.lib \
+	           main.exe main.exe.manifest main.compressed_debug.exe main.lib \
 	           $(OBJS) $(SHADER_OBJS) $(DEPS) \
 	           $(GEN_XISO)
 
