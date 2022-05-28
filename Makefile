@@ -126,15 +126,11 @@ DEPS += $(filter %.cpp.d, $(SRCS:.cpp=.cpp.d))
 
 $(OUTPUT_DIR)/default.xbe: main.exe $(OUTPUT_DIR) $(CXBE)
 	@echo "[ CXBE     ] $@"
-ifeq ($(UNAME_S),Darwin)
 	# llvm-objcopy@11 does not appear to implement compress-debug-sections, nor
 	# does --only-keep-debug work, so the full exe is cloned and linked.
 	$(VE)cp main.exe main.debug.exe
 	$(VE)$(OBJCOPY) --strip-debug main.exe
 	$(VE)$(OBJCOPY) --add-gnu-debuglink=main.debug.exe main.exe
-else
-	$(VE)$(OBJCOPY) --compress-debug-sections main.exe
-endif
 	$(VE)$(CXBE) -OUT:$@ -TITLE:$(XBE_TITLE) $< $(QUIET)
 
 $(OUTPUT_DIR):
