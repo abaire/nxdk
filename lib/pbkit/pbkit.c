@@ -3397,6 +3397,10 @@ int pb_init(void)
 
     Size=Pitch*VSize;
 
+    // PGRAPH TESTER ONLY
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+    Size *= 4;
+
     //verify 64 bytes alignment for size of a frame buffer
     if (Size&(64-1)) debugPrint("pb_init: FBSize is not well aligned.\n");
 
@@ -3469,6 +3473,9 @@ int pb_init(void)
     }
 
     Size=Pitch*VSize;
+// PGRAPH TESTER ONLY
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+Size *= 4;
 
     //verify 64 bytes alignment for size of a frame buffer
     if (Size&(64-1)) debugPrint("pb_init: DSSize is not well aligned.\n");
