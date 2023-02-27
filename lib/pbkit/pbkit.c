@@ -43,16 +43,6 @@
 #define ADDR_FBMEM                  2
 #define ADDR_AGPMEM                 3
 
-#define DMA_CLASS_2                 2
-#define DMA_CLASS_3                 3
-#define DMA_CLASS_3D                    0x3D
-
-#define GR_CLASS_30                 0x30
-#define GR_CLASS_39                 0x39
-#define GR_CLASS_62                 0x62
-#define GR_CLASS_97                 0x97
-#define GR_CLASS_9F                 0x9F
-
 #define GPU_IRQ                     3
 
 #define XTAL_16MHZ                  16.6667f
@@ -156,6 +146,7 @@ static  DWORD           pb_FBVFlag;
 static  DWORD           pb_GPUFrameBuffersFormat;//encoded format for GPU
 static  DWORD           pb_EXAddr[8];       //extra buffers addresses
 static  DWORD           pb_ExtraBuffersCount=0;
+static  DWORD           pb_FBSizeMultiplier = 1;
 
 static  DWORD           pb_DepthStencilAddr;
 static  DWORD           pb_DepthStencilPitch;
@@ -2219,6 +2210,11 @@ void pb_set_color_format(unsigned int fmt, bool swizzled) {
     assert(swizzled == false);
 }
 
+void pb_set_fb_size_multiplier(unsigned int multiplier) {
+    assert(multiplier > 0);
+    pb_FBSizeMultiplier = multiplier;
+}
+
 int pb_init(void)
 {
     DWORD           old;
@@ -2327,7 +2323,6 @@ int pb_init(void)
     pb_PutRunSize=0;
 
     pb_FrameBuffersAddr=0;
-
 
     pb_DmaBuffer8=MmAllocateContiguousMemoryEx(32,0,MAXRAM,0,4);
     pb_DmaBuffer2=MmAllocateContiguousMemoryEx(32,0,MAXRAM,0,4);
@@ -2979,7 +2974,7 @@ int pb_init(void)
         }
     }
 
-    Size=Pitch*VSize;
+    Size=Pitch*VSize*pb_FBSizeMultiplier;
 
     //verify 64 bytes alignment for size of a frame buffer
     if (Size&(64-1)) debugPrint("pb_init: FBSize is not well aligned.\n");
@@ -3052,7 +3047,7 @@ int pb_init(void)
         }
     }
 
-    Size=Pitch*VSize;
+    Size=Pitch*VSize*pb_FBSizeMultiplier;
 
     //verify 64 bytes alignment for size of a frame buffer
     if (Size&(64-1)) debugPrint("pb_init: DSSize is not well aligned.\n");
@@ -3106,7 +3101,7 @@ int pb_init(void)
             }
         }
 
-        Size=Pitch*VSize;
+        Size=Pitch*VSize*pb_FBSizeMultiplier;
 
         //verify 64 bytes alignment for size of a frame buffer
         if (Size&(64-1)) debugPrint("pb_init: EXSize is not well aligned.\n");

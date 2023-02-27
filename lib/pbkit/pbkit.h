@@ -71,6 +71,8 @@ DWORD   pb_back_buffer_pitch(void);
 
 void    pb_set_viewport(int dwx,int dwy,int width,int height,float zmin,float zmax);
 
+void    pb_set_fb_size_multiplier(unsigned int multiplier);
+
 int pb_busy(void);
 
 #ifdef __cplusplus
