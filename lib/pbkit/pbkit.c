@@ -43,16 +43,6 @@
 #define ADDR_FBMEM                  2
 #define ADDR_AGPMEM                 3
 
-#define DMA_CLASS_2                 2
-#define DMA_CLASS_3                 3
-#define DMA_CLASS_3D                    0x3D
-
-#define GR_CLASS_30                 0x30
-#define GR_CLASS_39                 0x39
-#define GR_CLASS_62                 0x62
-#define GR_CLASS_97                 0x97
-#define GR_CLASS_9F                 0x9F
-
 #define GPU_IRQ                     3
 
 #define XTAL_16MHZ                  16.6667f
@@ -1671,7 +1661,8 @@ static void set_draw_buffer(DWORD buffer_addr)
 
     //DMA channel 9 is used by GPU in order to render pixels
     dma_addr=buffer_addr;
-    dma_limit=height*pitch-1; //(last byte)
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+    dma_limit=height*pitch*4-1; //(last byte)
     dma_flags=DMA_CLASS_3D|0x0000B000;
     dma_addr|=3;
 
@@ -1690,7 +1681,8 @@ static void set_draw_buffer(DWORD buffer_addr)
 
     //DMA channel 11 is used by GPU in order to bitblt images
     dma_addr=buffer_addr;
-    dma_limit=height*pitch-1; //(last byte)
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+    dma_limit=height*pitch*4-1; //(last byte)
     dma_flags=DMA_CLASS_3D|0x0000B000;
     dma_addr|=3;
 
@@ -1715,7 +1707,8 @@ static void set_draw_buffer(DWORD buffer_addr)
         if (depth_stencil)
         {
             dma_addr=pb_DSAddr&0x03FFFFFF;
-            dma_limit=height*pitch_depth_stencil-1; //(last byte)
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+            dma_limit=height * pitch_depth_stencil * 4 - 1;  //(last byte)
             dma_flags=DMA_CLASS_3D|0x0000B000;
             dma_addr|=3;
             flag=1;
@@ -1745,7 +1738,7 @@ static void set_draw_buffer(DWORD buffer_addr)
         p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_STENCIL_ENABLE,1);   //StencilEnable=TRUE
         pb_end(p);
 
-        pb_DepthStencilLast=depth_stencil;
+      pb_DepthStencilLast = depth_stencil;
     }
 
     p=pb_begin();
