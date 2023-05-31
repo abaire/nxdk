@@ -634,8 +634,14 @@ static DWORD pb_gr_handler(void)
                             if (nsource&NV_PGRAPH_NSOURCE_DATA_ERROR_PENDING) debugPrint("GPU Error : invalid data error!\n");
                             if (nsource&NV_PGRAPH_NSOURCE_PROTECTION_ERROR_PENDING) debugPrint("GPU Error : protection error!\n");
                             if (nsource&NV_PGRAPH_NSOURCE_RANGE_EXCEPTION_PENDING) debugPrint("GPU Error : range exception error!\n");
-                            if (nsource&NV_PGRAPH_NSOURCE_LIMIT_COLOR_PENDING) debugPrint("GPU Error : color buffer limit error!\n");
-                            if (nsource&NV_PGRAPH_NSOURCE_LIMIT_ZETA_PENDING) debugPrint("GPU Error : zeta buffer limit error!\n");
+                            if (nsource&NV_PGRAPH_NSOURCE_LIMIT_COLOR_PENDING) {
+                              uint32_t limit_details = VIDEOREG(0x00400800);
+                              debugPrint("GPU Error : color buffer limit error! 0x%X\n", limit_details);
+                            }
+                            if (nsource&NV_PGRAPH_NSOURCE_LIMIT_ZETA_PENDING) {
+                              uint32_t limit_details = VIDEOREG(0x00400800);
+                              debugPrint("GPU Error : zeta buffer limit error! 0x%X\n", limit_details);
+                            }
                             if (nsource&NV_PGRAPH_NSOURCE_DMA_R_PROTECTION_PENDING) debugPrint("GPU Error : dma read protection error!\n");
                             if (nsource&NV_PGRAPH_NSOURCE_DMA_W_PROTECTION_PENDING) debugPrint("GPU Error : dma write protection error!\n");
                             if (nsource&NV_PGRAPH_NSOURCE_FORMAT_EXCEPTION_PENDING) debugPrint("GPU Error : format exception error!\n");
@@ -1853,7 +1859,8 @@ static void set_draw_buffer(DWORD buffer_addr)
 
     //DMA channel 9 is used by GPU in order to render pixels
     dma_addr=buffer_addr;
-    dma_limit=height*pitch-1; //(last byte)
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+    dma_limit=height*pitch*4-1; //(last byte)
     dma_flags=DMA_CLASS_3D|0x0000B000;
     dma_addr|=3;
 
@@ -1872,7 +1879,8 @@ static void set_draw_buffer(DWORD buffer_addr)
 
     //DMA channel 11 is used by GPU in order to bitblt images
     dma_addr=buffer_addr;
-    dma_limit=height*pitch-1; //(last byte)
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+    dma_limit=height*pitch*4-1; //(last byte)
     dma_flags=DMA_CLASS_3D|0x0000B000;
     dma_addr|=3;
 
@@ -1891,44 +1899,43 @@ static void set_draw_buffer(DWORD buffer_addr)
 
     depth_stencil=1;
 
-    if (depth_stencil!=-1) //don't care
-    if (pb_DepthStencilLast!=depth_stencil) //changed?
-    {
-        //DMA channel 10 is used by GPU in order to render depth stencil
-        if (depth_stencil)
-        {
-            dma_addr=pb_DSAddr&0x03FFFFFF;
-            dma_limit=height*pitch_depth_stencil-1; //(last byte)
-            dma_flags=DMA_CLASS_3D|0x0000B000;
-            dma_addr|=3;
-            flag=1;
-        }
-        else
-        {
-            dma_addr=0;
-            dma_limit=0;
-            dma_flags=DMA_CLASS_3D|0x0000B000;
-            dma_addr|=3;
-            flag=0;
-            pitch_depth_stencil=pitch;
-        }
+    if (depth_stencil != -1 && pb_DepthStencilLast != depth_stencil) {  // changed?
+      // DMA channel 10 is used by GPU in order to render depth stencil
+      if (depth_stencil) {
+        dma_addr = pb_DSAddr & 0x03FFFFFF;
+#warning NXDK_PGRAPH_TESTS: RESERVING 4x SIZE FOR ANTIALIASING TESTS
+        dma_limit = height * pitch_depth_stencil * 4 - 1;  //(last byte)
+        dma_flags = DMA_CLASS_3D | 0x0000B000;
+        dma_addr |= 3;
+        flag = 1;
+      } else {
+        dma_addr = 0;
+        dma_limit = 0;
+        dma_flags = DMA_CLASS_3D | 0x0000B000;
+        dma_addr |= 3;
+        flag = 0;
+        pitch_depth_stencil = pitch;
+      }
 
-        p=pb_begin();
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_WAIT_MAKESPACE,0);
-        p=pb_push2(p,NV20_TCL_PRIMITIVE_3D_PARAMETER_A,NV_PRAMIN+(pb_DmaChID10Inst<<4)+0x08,dma_addr); //set params addr,data
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,PB_SETOUTER); //calls subprogID PB_SETOUTER: does VIDEOREG(addr)=data
-        p=pb_push2(p,NV20_TCL_PRIMITIVE_3D_PARAMETER_A,NV_PRAMIN+(pb_DmaChID10Inst<<4)+0x0C,dma_addr);
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,PB_SETOUTER);
-        p=pb_push2(p,NV20_TCL_PRIMITIVE_3D_PARAMETER_A,NV_PRAMIN+(pb_DmaChID10Inst<<4)+0x00,dma_flags);
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,PB_SETOUTER);
-        p=pb_push2(p,NV20_TCL_PRIMITIVE_3D_PARAMETER_A,NV_PRAMIN+(pb_DmaChID10Inst<<4)+0x04,dma_limit);
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,PB_SETOUTER);
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_SET_OBJECT4,10);
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_DEPTH_TEST_ENABLE,flag); //ZEnable=TRUE or FALSE (But don't use W, see below)
-        p=pb_push1(p,NV20_TCL_PRIMITIVE_3D_STENCIL_ENABLE,1);   //StencilEnable=TRUE
-        pb_end(p);
+      p = pb_begin();
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_WAIT_MAKESPACE, 0);
+      p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (pb_DmaChID10Inst << 4) + 0x08,
+                   dma_addr);  // set params addr,data
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT,
+                   PB_SETOUTER);  // calls subprogID PB_SETOUTER: does VIDEOREG(addr)=data
+      p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (pb_DmaChID10Inst << 4) + 0x0C, dma_addr);
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
+      p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (pb_DmaChID10Inst << 4) + 0x00, dma_flags);
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
+      p = pb_push2(p, NV20_TCL_PRIMITIVE_3D_PARAMETER_A, NV_PRAMIN + (pb_DmaChID10Inst << 4) + 0x04, dma_limit);
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_FIRE_INTERRUPT, PB_SETOUTER);
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_SET_OBJECT4, 10);
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_DEPTH_TEST_ENABLE,
+                   flag);                                        // ZEnable=TRUE or FALSE (But don't use W, see below)
+      p = pb_push1(p, NV20_TCL_PRIMITIVE_3D_STENCIL_ENABLE, 1);  // StencilEnable=TRUE
+      pb_end(p);
 
-        pb_DepthStencilLast=depth_stencil;
+      pb_DepthStencilLast = depth_stencil;
     }
 
     p=pb_begin();
