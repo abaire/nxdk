@@ -157,7 +157,7 @@ class Xbe : public Error
             uint16 Approved : 2;    // Approved? (0:no, 1:possibly, 2:yes)
             uint16 bDebugBuild : 1; // Is this a debug build?
         } dwFlags;
-    } __attribute((packed)) * m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
+    } __attribute((packed)) * m_LibraryVersion;
 
     // Xbe thread local storage
     struct TLS
