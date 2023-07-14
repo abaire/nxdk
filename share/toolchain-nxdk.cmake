@@ -45,6 +45,8 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES
         "${NXDK_DIR}/lib/xboxrt/vcruntime"
 )
 
+set(CMAKE_OBJCOPY "${NXDK_DIR}/bin/${TOOLCHAIN_PREFIX}-objcopy" CACHE INTERNAL "Path to the `objcopy` binary within the toolchain.")
+
 set(CMAKE_STATIC_LIBRARY_SUFFIX ".lib")
 set(CMAKE_STATIC_LIBRARY_SUFFIX_C ".lib")
 set(CMAKE_STATIC_LIBRARY_SUFFIX_CXX ".lib")
