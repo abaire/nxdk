@@ -1,5 +1,5 @@
 BasedOnStyle: Microsoft
-ColumnLimit: 0
+ColumnLimit: 120
 IndentCaseLabels: true
 AlignTrailingComments: true
 AlignConsecutiveMacros: true
