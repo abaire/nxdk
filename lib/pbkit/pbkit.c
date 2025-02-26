@@ -231,6 +231,16 @@ static NTAPI VOID pb_shutdown_notification_routine (PHAL_SHUTDOWN_REGISTRATION S
 
 //private functions
 
+// DONOTSUBMIT
+static void DEBUG_TAG(int tag)
+{
+    DWORD old_val = VIDEOREG(PCRTC_START);
+    for (int i = 0; i < tag; ++i) {
+        VIDEOREG(PCRTC_START) = 0xEAFFFEA;
+    }
+    VIDEOREG(PCRTC_START) = old_val;
+}
+
 static void pb_set_gamma_ramp(BYTE *pGammaRamp)
 {
     int         i;
