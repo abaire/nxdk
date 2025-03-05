@@ -82,6 +82,13 @@ void pb_create_gr_ctx(int ChannelID,
                       int Class,
                       struct s_CtxDma *pGrObject);
 void pb_bind_channel(struct s_CtxDma *pCtxDmaObject);
+DWORD pb_reserve_instance(DWORD size);
+void pb_create_gr_instance(int ChannelID,
+                        int Class,
+                        DWORD instance,
+                        DWORD flags,
+                        DWORD flags3D,
+                        struct s_CtxDma *pGrObject);
 
 #ifdef __cplusplus
 }
