@@ -89,6 +89,9 @@ void pb_create_gr_instance(int ChannelID,
                         DWORD flags,
                         DWORD flags3D,
                         struct s_CtxDma *pGrObject);
+uint8_t *pb_depth_stencil_buffer();
+DWORD pb_depth_stencil_pitch();
+DWORD pb_depth_stencil_size();
 
 #ifdef __cplusplus
 }
