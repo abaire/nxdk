@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: 2004 Craig Edwards
 // SPDX-FileCopyrightText: 2006 Richard Osborne
 // SPDX-FileCopyrightText: 2017-2020 Stefan Schmidt
-// SPDX-FileCopyrightText: 2022 Erik Abair
+// SPDX-FileCopyrightText: 2022-2025 Erik Abair
 
 #include <string.h>
 // #include <xboxrt/stat.h>
@@ -17,6 +17,8 @@
 #define KernelMode 0
 
 #define LaunchDataPageSize 0x1000
+
+static const char *xonline_dash_path = "\\Device\\Harddisk0\\partition2\\XODash\\xonlinedash.xbe";
 
 void XReboot()
 {
@@ -68,7 +70,14 @@ void XLaunchXBEEx(const char *xbePath, const void *launchData)
 
     if (!xbePath) {
         launchDataPage->Header.dwLaunchDataType = LDT_LAUNCH_DASHBOARD;
-    } else {
+
+        // Redirect to xonlinedash.xbe as needed.
+        if (launchData && *(int*)launchData >= LDT_LAUNCH_DASHBOARD_REASON_NETWORK) {
+            xbePath = xonline_dash_path;
+        }
+    }
+
+    if (xbePath) {
         XConvertDOSFilenameToXBOX(xbePath, launchDataPage->Header.szLaunchPath);
 
         // one last thing... xbePath now looks like:
