@@ -177,7 +177,7 @@ $(EXTRACT_XISO):
 	@echo "[ BUILD    ] $@"
 	$(VE)(mkdir $(NXDK_DIR)/tools/extract-xiso/build; \
 	cd $(NXDK_DIR)/tools/extract-xiso/build && \
-	cmake -G "Unix Makefiles" .. $(QUIET) && \
+	cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -G "Unix Makefiles" .. $(QUIET) && \
 	$(MAKE) $(QUIET))
 
 .PHONY: clean
