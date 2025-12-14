@@ -1,8 +1,6 @@
-if(DEFINED ENV{NXDK_DIR})
-    set(NXDK_DIR $ENV{NXDK_DIR})
-else()
-    message(FATAL_ERROR "The environment variable NXDK_DIR needs to be defined.")
-endif()
+get_filename_component(NXDK_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+set(NXDK_DIR "${NXDK_ROOT_DIR}" CACHE PATH "Path to the nxdk root directory.")
+message(STATUS "Using NXDK from: ${NXDK_DIR}")
 
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMAKE_SYSTEM_VERSION 1)

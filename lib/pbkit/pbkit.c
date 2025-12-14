@@ -798,7 +798,7 @@ static void pb_set_fifo_channel(int channel)
 
 
 
-
+DWORD ptimer_alarm_count = 0;
 
 static void __stdcall DPC(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
 {
@@ -817,6 +817,7 @@ static void __stdcall DPC(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument
 
         if (status&NV_PMC_INTR_0_PTIMER_PENDING)
         {
+            ++ptimer_alarm_count;
             VIDEOREG(NV_PTIMER_INTR_0)=NV_PTIMER_INTR_0_ALARM_RESET;
             more=VIDEOREG(NV_PTIMER_INTR_0);
         }
