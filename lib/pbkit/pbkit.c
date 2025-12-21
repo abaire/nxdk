@@ -103,17 +103,17 @@ static  DWORD           *pb_DmaBuffer8; //points at 32 contiguous bytes (Dma Cha
 static  DWORD           *pb_DmaBuffer2; //points at 32 contiguous bytes (Dma Channel ID 2 buffer)
 static  DWORD           *pb_DmaBuffer7; //points at 32 contiguous bytes (Dma Channel ID 7 buffer)
 
-static  DWORD           pb_Size=PBKIT_PUSHBUFFER_SIZE;//push buffer size, must be >64Kb and a power of 2
-static  uint32_t        *pb_Head;   //points at push buffer head
-static  uint32_t        *pb_Tail;   //points at push buffer tail
-static  uint32_t        *pb_Put=NULL;   //where next command+params are to be written
+DWORD           pb_Size=PBKIT_PUSHBUFFER_SIZE;//push buffer size, must be >64Kb and a power of 2
+uint32_t        *pb_Head;   //points at push buffer head
+uint32_t        *pb_Tail;   //points at push buffer tail
+uint32_t        *pb_Put=NULL;   //where next command+params are to be written
 
 static  float           pb_CpuFrequency;
 
 static  DWORD           pb_GpuInstMem;
 
-static  DWORD           pb_PushBase;
-static  DWORD           pb_PushLimit;
+DWORD           pb_PushBase;
+DWORD           pb_PushLimit;
 
 static  DWORD           pb_FifoHTAddr;
 static  DWORD           pb_FifoFCAddr;
@@ -149,7 +149,7 @@ static  DWORD           pb_FrameBuffersWidth;
 static  DWORD           pb_FrameBuffersHeight;
 static  DWORD           pb_FrameBuffersAddr;
 static  DWORD           pb_FrameBuffersPitch;
-static  DWORD           pb_FBAddr[3];       //frame buffers addresses
+DWORD           pb_FBAddr[3];       //frame buffers addresses
 static  DWORD           pb_FBSize;      //size of 1 buffer
 static  DWORD           pb_FBGlobalSize;    //size of all buffers
 static  DWORD           pb_FBVFlag;
@@ -164,8 +164,8 @@ static  DWORD           pb_DSAddr;      //depth stencil address
 static  DWORD           pb_DSSize;      //size of depth stencil buffer
 static  DWORD           pb_GPUDepthStencilFormat;//encoded format for GPU
 
-static  int         pb_front_index;
-static  int         pb_back_index;
+int         pb_front_index;
+int         pb_back_index;
 
 static  DWORD           pb_Viewport_x;
 static  DWORD           pb_Viewport_y;
@@ -186,11 +186,11 @@ static  DWORD           pb_DmaChID9Inst;
 static  DWORD           pb_DmaChID10Inst;
 static  DWORD           pb_DmaChID11Inst;
 
-static volatile DWORD  *pb_DmaUserAddr;
+volatile DWORD  *pb_DmaUserAddr;
 
-static  DWORD           pb_PushIndex;
-static  DWORD           *pb_PushStart;
-static  DWORD           *pb_PushNext;
+DWORD           pb_PushIndex;
+DWORD           *pb_PushStart;
+DWORD           *pb_PushNext;
 
 static int          pb_BeginEndPair=0;
 
@@ -798,7 +798,8 @@ static void pb_set_fifo_channel(int channel)
 
 
 
-DWORD ptimer_alarm_count = 0;
+volatile DWORD ptimer_alarm_count = 0;
+void (*ptimer_alarm_fired_callback)(void) = NULL;
 
 static void __stdcall DPC(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
 {
@@ -818,6 +819,9 @@ static void __stdcall DPC(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument
         if (status&NV_PMC_INTR_0_PTIMER_PENDING)
         {
             ++ptimer_alarm_count;
+			if (ptimer_alarm_fired_callback) {
+				ptimer_alarm_fired_callback();
+			}
             VIDEOREG(NV_PTIMER_INTR_0)=NV_PTIMER_INTR_0_ALARM_RESET;
             more=VIDEOREG(NV_PTIMER_INTR_0);
         }
@@ -1649,7 +1653,7 @@ DWORD *pb_extra_buffer(int buffer_index)
 }
 
 
-static void set_draw_buffer(DWORD buffer_addr)
+void set_draw_buffer(DWORD buffer_addr)
 {
     uint32_t        *p;
 
