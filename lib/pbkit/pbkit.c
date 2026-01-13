@@ -137,7 +137,9 @@ static  DWORD           pb_GetRunSize;
 static  DWORD           pb_FrameBuffersCount;
 static  DWORD           pb_FrameBuffersWidth;
 static  DWORD           pb_FrameBuffersHeight;
-static  DWORD           pb_FrameBuffersAddr;
+static  DWORD           pb_FrameBuffersAddr = 0;
+static  DWORD           pb_FrameBuffersAllocationSize = 0;
+static  DWORD           pb_FrameBuffersTilePitch = 0;
 static  DWORD           pb_FrameBuffersPitch;
 static  DWORD           pb_FBAddr[3];       //frame buffers addresses
 static  DWORD           pb_FBSize;      //size of 1 buffer
@@ -3015,6 +3017,8 @@ int pb_init(void)
         pb_kill();
         return -11;
     }
+	pb_FrameBuffersAllocationSize = FBSize;
+	pb_FrameBuffersTilePitch = Pitch;
 
     for(i=0;i<FrameBufferCount;i++)
     {
@@ -3338,4 +3342,10 @@ DWORD pb_depth_stencil_pitch() {
 
 DWORD pb_depth_stencil_size() {
   return pb_DSSize;
+}
+
+void pb_get_framebuffer_tile_info(DWORD *address, DWORD *size, DWORD *pitch) {
+  *address = pb_FrameBuffersAddr;
+  *size = pb_FrameBuffersAllocationSize;
+  *pitch = pb_FrameBuffersTilePitch;
 }

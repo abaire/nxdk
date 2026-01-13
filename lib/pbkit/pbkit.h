@@ -95,6 +95,15 @@ uint8_t *pb_depth_stencil_buffer();
 DWORD pb_depth_stencil_pitch();
 DWORD pb_depth_stencil_size();
 
+void pb_assign_tile(int tile_index,
+                    DWORD tile_addr,
+                    DWORD tile_size,
+                    DWORD tile_pitch,
+                    DWORD tile_z_start_tag,
+                    DWORD tile_z_offset,
+                    DWORD tile_flags);
+void pb_get_framebuffer_tile_info(DWORD *address, DWORD *size, DWORD *pitch);
+
 #ifdef __cplusplus
 }
 #endif
