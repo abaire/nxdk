@@ -206,6 +206,8 @@ static  float           pb_BiasTable[7]={
                     1.907f,
                     2.0f    };
 
+static BOOLEAN pb_fatal_error = FALSE;
+
 static HAL_SHUTDOWN_REGISTRATION pb_shutdown_registration;
 
 //forward references
@@ -462,9 +464,8 @@ static DWORD pb_gr_handler(void)
 
                             //calling XReboot() from here doesn't work well.
 
-                            while(1) {
-                              Sleep(2000);
-                            };
+                            pb_fatal_error = TRUE;
+                            return 0;
                         }
                     }
                 }
@@ -780,7 +781,12 @@ static void __stdcall DPC(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument
 
         if (status&NV_PMC_INTR_0_PCRTC_PENDING) pb_vbl_handler();
 
-        if (status&NV_PMC_INTR_0_PGRAPH_PENDING) more|=pb_gr_handler();
+        if (status&NV_PMC_INTR_0_PGRAPH_PENDING) {
+            more|=pb_gr_handler();
+            if (pb_fatal_error) {
+                break;
+            }
+        }
 
         if (    (VIDEOREG8(NV_PFIFO_DEBUG_0)&NV_PFIFO_DEBUG_0_CACHE_ERROR0_PENDING)||
             (status&NV_PMC_INTR_0_PFIFO_PENDING)    ) more|=pb_fifo_handler();
@@ -799,7 +805,7 @@ static BOOLEAN __stdcall ISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
     //Interruption Service Routine (triggered by interrupt signal IRQ3)
     int         next;
 
-    if (pb_running==0) return FALSE;
+    if (pb_running==0 || pb_fatal_error) return FALSE;
 
     //really, not for us at all
     if (VIDEOREG(NV_PMC_INTR_0)==NV_PMC_INTR_0_NOT_PENDING) return FALSE;
@@ -1785,6 +1791,9 @@ void pb_reset(void)
 
 uint32_t *pb_begin(void)
 {
+    while(pb_fatal_error) {
+        Sleep(100);
+    }
 #ifdef DBG
     if (pb_Put>=pb_Tail) debugPrint("ERROR! Push buffer overflow! Use pb_reset more often or enlarge push buffer!\n");
 
