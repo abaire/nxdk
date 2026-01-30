@@ -1,7 +1,7 @@
 NXDK_DIR = $(CURDIR)/../..
 
 DXT_TITLE = hello
-SRCS = main.c
+SRCS = main.c command_processor_util.c
 
 DEBUG = n
 

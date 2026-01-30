@@ -2,16 +2,23 @@
 #define __XBDM_H__
 
 #include <processthreadsapi.h>
-
-#define XBDM_NOERR 0x2db << 16 // FIXME: !!!
+#include <xboxkrnl/xboxkrnl.h>
+#include <xbdm/xbdm_err.h>
 
 typedef void *PDMN_MODLOAD;        // FIXME: !!!
 typedef void *PDMN_SESSION;        // FIXME: !!!
 typedef void *PDM_NOTIFY_FUNCTION; // FIXME: !!!
 
 #define DM_PERSISTENT 1
-
 #define DM_MODLOAD 5
+
+// All DXT targets must have exactly one DXT_ENTRY declaration as an entrypoint
+#define DXT_ENTRY(pfUnloadParamName)                                               \
+  int main() {                                                                 \
+    (void)KeTickCount;                                                         \
+    return 0;                                                                  \
+  }                                                                            \
+  void DxtEntry(ULONG * pfUnloadParamName)
 
 typedef struct _DM_CMDCONT *PDM_CMDCONT;
 
@@ -20,7 +27,7 @@ typedef HRESULT(__stdcall *PDM_CMDCONTPROC)(PDM_CMDCONT pdmcc, LPSTR szResponse,
 
 //! Contains contextual information used when a debug command processor needs to
 //! do something more than immediately reply with a simple, short response.
-typedef struct {
+typedef struct _DM_CMDCONT {
   //! Function to be invoked to actually send or receive data. This function
   //! will be called repeatedly until `bytes_remaining` is set to 0.
   PDM_CMDCONTPROC HandlingFunction;
